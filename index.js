@@ -36,8 +36,19 @@ const Logger =(req,res,next)=>{
 }
 const verifyToken=(req,res,next)=>{
     const token = req.cookies?.token;
-    console.log(token)
-    next()
+    // console.log(token)
+    if(!token){
+        return res.status(401).send({massage: "unAuthorized Access"})
+    }
+    jwt.verify(token,process.env.SECRET_TOKEN,(err,decoded)=>{
+        if(err){
+            return res.status(401).send({massage:"unAuthorized Access"})
+        }
+        req.user=decoded;
+        console.log(req.user.email)
+        next();
+    })
+    
 }
 
 async function run() {
@@ -88,6 +99,9 @@ async function run() {
         // bookings 
         app.get('/bookings',Logger,verifyToken, async (req, res) => {
             // console.log(req.query.email,"hitted");
+           if(req.user.email !== req.query.email){
+            return res.status(403).send({massage:"access forbiden"})
+           }
             let query = {};
             if (req.query?.email) {
                 query = { email: req.query.email }
