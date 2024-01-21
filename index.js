@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
+const  cookieParser = require('cookie-parser');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const app = express();
@@ -11,7 +12,8 @@ app.use(cors({
      origin:["http://localhost:5173"],
      credentials:true}));
 app.use(express.json());
-
+app.use(cookieParser())
+ 
 
 console.log(process.env.DB_PASS)
 
@@ -28,6 +30,15 @@ const client = new MongoClient(uri, {
         deprecationErrors: true,
     }
 });
+const Logger =(req,res,next)=>{
+    console.log("this is logger info METHOD=>",req.method,"URL =>",req.url );
+    next()
+}
+const verifyToken=(req,res,next)=>{
+    const token = req.cookies?.token;
+    console.log(token)
+    next()
+}
 
 async function run() {
     try {
@@ -75,7 +86,7 @@ async function run() {
 
 
         // bookings 
-        app.get('/bookings', async (req, res) => {
+        app.get('/bookings',Logger,verifyToken, async (req, res) => {
             // console.log(req.query.email,"hitted");
             let query = {};
             if (req.query?.email) {
